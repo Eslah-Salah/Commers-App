@@ -1,141 +1,129 @@
-import React, { useContext, useEffect, useState } from "react";
-import Style from "./Login.module.css";
+import React, { useContext, useState } from "react";
 import { useFormik } from "formik";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import { UserContext } from "../../context/UserContect";
 
-
-
-
+// Reusable Input Field Component
+const InputField = ({ label, name, type, formik }) => (
+  <div className="w-full">
+    <label htmlFor={name} className="block mb-1 text-sm text-gray-600 dark:text-gray-300">
+      {label}
+    </label>
+    <input
+      id={name}
+      name={name}
+      type={type}
+      onChange={formik.handleChange}
+      onBlur={formik.handleBlur}
+      value={formik.values[name]}
+      className="w-full px-4 py-2 text-sm border rounded-lg bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-600 outline-none"
+    />
+    {formik.errors[name] && formik.touched[name] && (
+      <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formik.errors[name]}</p>
+    )}
+  </div>
+);
 
 export default function Login() {
-  let {setuserLogin}=useContext(UserContext);
-  const [apiError, setapiError] = useState("");
-  const [isLoading, setisLoading] = useState(false);
-  
-  let navigate = useNavigate();
-  function handleLogin(formValues) {
-    setisLoading(true)
-    axios
-      .post("https://ecommerce.routemisr.com/api/v1/auth/signin", formValues)
-      .then( (apiResponse)=> {
-        if(apiResponse.data.message==='success'){
-          navigate("/");
-         localStorage.setItem('userToken',apiResponse.data.token);
-         setuserLogin(apiResponse.data.token);
-         setisLoading(false);
-        }
-       
-       })
-      .catch((apiResponse) => {
-        setisLoading(false);
-        setapiError(apiResponse?.response?.data?.message);
-      });
-  }
-  let validationSchema = yup.object().shape({
-    
-    email: yup.string().email("email is invalid").required("email is required"),
-   
+  const { setuserLogin } = useContext(UserContext);
+  const [apiError, setApiError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const validationSchema = yup.object({
+    email: yup.string().email("Email is invalid").required("Email is required"),
     password: yup
       .string()
-      .matches(/^[A-Z][a-z0-9]{5,10}$/, "password must start with uppercase")
-      .required("password is required"),
-   
+      .matches(/^[A-Z][a-z0-9]{5,10}$/, "Password must start with uppercase and be 6–11 characters")
+      .required("Password is required"),
   });
-  let formik = useFormik({
-    initialValues: {
-      
-      email: "",
-      password: "",
-     
-    },
-    validationSchema: validationSchema,
+
+  const formik = useFormik({
+    initialValues: { email: "", password: "" },
+    validationSchema,
     onSubmit: handleLogin,
   });
 
+  function handleLogin(values) {
+    setIsLoading(true);
+    axios
+      .post("https://ecommerce.routemisr.com/api/v1/auth/signin", values)
+      .then((res) => {
+        if (res.data.message === "success") {
+          localStorage.setItem("userToken", res.data.token);
+          setuserLogin(res.data.token);
+          navigate("/");
+        }
+      })
+      .catch((error) => {
+        setApiError(error?.response?.data?.message || "Login failed");
+      })
+      .finally(() => setIsLoading(false));
+  }
+
   return (
-    <>
-      <div className="py-6 max-w-xl mx-auto text-green-600 mt-8 ">
-       
-       {apiError? <div
-          className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-          role="alert"
-        >{apiError}</div>:null}
-        <h2 className="text-3xl font-bold mb-6">Login Now</h2>
-        <form onSubmit={formik.handleSubmit}>
-         
-          <div className="relative z-0 w-full mb-5 group">
-            <input
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              value={formik.values.email}
-              type="email"
-              name="email"
-              id="email"
-              className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-green-500 focus:outline-none focus:ring-0 focus:border-green-600 peer"
-              placeholder=" "
-            />
-            <label
-              htmlFor="email"
-              className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-            >
-              Enter your Email address:
-            </label>
-            {formik.errors.email && formik.touched.email ? (
-              <div
-                className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-                role="alert"
-              >
-                {formik.errors.email}
-              </div>
-            ) : null}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg space-y-6">
+        <h2 className="text-2xl font-bold text-green-600 dark:text-green-400 text-center">
+          Login Now
+        </h2>
+
+        {apiError && (
+          <div className="text-sm text-red-600 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 p-3 rounded-md">
+            {apiError}
           </div>
-        
-          <div className="relative z-0 w-full mb-5 group">
-            <input
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              value={formik.values.password}
-              type="password"
-              name="password"
-              id="password"
-              className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-green-500 focus:outline-none focus:ring-0 focus:border-green-600 peer"
-              placeholder=" "
-            />
-            <label
-              htmlFor="password"
-              className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+        )}
+
+        <form onSubmit={formik.handleSubmit} className="space-y-4">
+          <InputField label="Email Address" name="email" type="email" formik={formik} />
+          <InputField label="Password" name="password" type="password" formik={formik} />
+
+          <div className="flex items-center justify-between text-sm">
+            <Link
+              to="/forgetPassword"
+              className="text-green-600 hover:underline dark:text-green-400"
             >
-              Enter your password:
-            </label>
-            {formik.errors.password && formik.touched.password ? (
-              <div
-                className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-                role="alert"
-              >
-                {formik.errors.password}
-              </div>
-            ) : null}
+              Forgot password?
+            </Link>
           </div>
-          <div className="flex items-center ">
-            <Link to="/forgetPassword">Forget Password?</Link>
-          <br/>
 
           <button
             type="submit"
-            className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
+            disabled={isLoading}
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-green-400 disabled:opacity-70"
           >
-           {isLoading?<i className="fas fa-spider fa-spin"></i>:'Login'}
+            {isLoading ? (
+              <span className="flex justify-center items-center gap-2">
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.3 0 0 5.3 0 12h4zm2 5.3A7.9 7.9 0 014 12H0c0 3 1.1 5.8 3 7.9l3-2.6z"
+                  ></path>
+                </svg>
+                Logging in...
+              </span>
+            ) : (
+              "Login"
+            )}
           </button>
-          
-          </div>
-          
-         
-         
         </form>
       </div>
-    </>
+    </div>
   );
 }

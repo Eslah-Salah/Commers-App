@@ -1,206 +1,142 @@
-import React, { useContext, useEffect, useState } from "react";
-
-
+import React, { useContext, useState } from "react";
 import axios from "axios";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import { UserContext } from "../../context/UserContect";
 import { useFormik } from "formik";
 
+export default function ForgetPassword() {
+  let { setuserLogin } = useContext(UserContext);
+  const [apiError, setApiError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [formDisplay, setFormDisplay] = useState(true);
+  const navigate = useNavigate();
 
-
-
-
-
-export default function forgetPassword() {
-  let {setuserLogin}=useContext(UserContext);
-  const [apiError, setapiError] = useState("");
-  const [isLoading, setisLoading] = useState(false);
-  const [formDisplay, setformDisplay] = useState(true);
-  
-  let navigate = useNavigate();
   function forgetPasswordApi(formValues) {
-    setisLoading(true)
+    setIsLoading(true);
     axios
       .post("https://ecommerce.routemisr.com/api/v1/auth/forgotPasswords", formValues)
-      .then( (apiResponse)=> {
-       if(apiResponse.data.statusMsg=='success'){
-        setformDisplay(false)
-        
-        
-         setisLoading(false);
-         
+      .then((res) => {
+        if (res.data.statusMsg === "success") {
+          setFormDisplay(false);
         }
-       
-       
-       })
-      .catch((apiResponse) => {
-        setisLoading(false);
-        setapiError(apiResponse?.response?.data?.message);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        setApiError(err?.response?.data?.message);
       });
   }
-  let validationSchema = yup.object().shape({
-    
-    email: yup.string().email("email is invalid").required("email is required"),
-   
-   
-   
-  });
-  let forgetForm = useFormik({
-    initialValues: {
-      
-      email: "",
-     
-     
-    },
-    validationSchema: validationSchema,
-    onSubmit: forgetPasswordApi,
-  });
- 
 
   function verifyResetCodeApi(formValues) {
-    setisLoading(true)
+    setIsLoading(true);
     axios
       .post("https://ecommerce.routemisr.com/api/v1/auth/verifyResetCode", formValues)
-      .then( (apiResponse)=> {
-      if(apiResponse.data.status=="Success"){
-        navigate('/updatePassword')
-        
-         setisLoading(false);
-         
-      }
-        
-
-       
-      
-       })
-      .catch((apiResponse) => {
-        setisLoading(false);
-        setapiError(apiResponse?.response?.data?.message);
+      .then((res) => {
+        if (res.data.status === "Success") {
+          navigate("/updatePassword");
+        }
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        setApiError(err?.response?.data?.message);
       });
-    
   }
-  let validationSchema2 = yup.object().shape({
-    resetCode: yup.string().required("resetCode is required"),
+
+  const forgetForm = useFormik({
+    initialValues: { email: "" },
+    validationSchema: yup.object({
+      email: yup.string().email("Invalid email").required("Email is required"),
+    }),
+    onSubmit: forgetPasswordApi,
   });
-  let verifyResetCodeForm = useFormik({
-    initialValues: {
-      resetCode: "", 
-    },
-    validationSchema: validationSchema2,
+
+  const verifyResetCodeForm = useFormik({
+    initialValues: { resetCode: "" },
+    validationSchema: yup.object({
+      resetCode: yup.string().required("Reset code is required"),
+    }),
     onSubmit: verifyResetCodeApi,
   });
+
   return (
-    <>
-    {formDisplay? <div className="py-6 max-w-xl mx-auto text-green-600 ">
-        
-       
-        {apiError? <div
-           className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-           role="alert"
-         >{apiError}</div>:null}
-         <h2 className="text-3xl font-bold mb-6">forget Password</h2>
-         <form onSubmit={forgetForm.handleSubmit}>
-          
-           <div className="relative z-0 w-full mb-5 group">
-             <input
-               onChange={forgetForm.handleChange}
-               onBlur={forgetForm.handleBlur}
-               value={forgetForm.values.email}
-               type="email"
-               name="email"
-               id="email"
-               className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-green-500 focus:outline-none focus:ring-0 focus:border-green-600 peer"
-               placeholder=" "
-             />
-             <label
-               htmlFor="email"
-               className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-             >
-               Enter your Email address:
-             </label>
-             {forgetForm.errors.email && forgetForm.touched.email ? (
-               <div
-                 className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-                 role="alert"
-               >
-                 {forgetForm.errors.email}
-               </div>
-             ) : null}
-           </div>
-         
-          
-           <div className="flex items-center ">
-           
-           <br/>
-           <button
-             type="submit"
-             className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
-           >
-            {isLoading?<i className="fas fa-spider fa-spin"></i>:'send'}
-           </button>
-           
-           </div>
-           
-          
-          
-         </form>
-       </div>: <div className="py-6 max-w-xl mx-auto text-green-600 ">
-        
-       
-        {apiError? <div
-           className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-           role="alert"
-         >{apiError}</div>:null}
-         <h2 className="text-3xl font-bold mb-6">Rest Code</h2>
-         <form onSubmit={verifyResetCodeForm.handleSubmit}>
-          
-           <div className="relative z-0 w-full mb-5 group">
-             <input
-               onChange={verifyResetCodeForm.handleChange}
-               onBlur={verifyResetCodeForm.handleBlur}
-               value={verifyResetCodeForm.values.email}
-               type="string"
-               name="resetCode"
-               id="resetCode"
-               className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-green-500 focus:outline-none focus:ring-0 focus:border-green-600 peer"
-               placeholder=" "
-             />
-             <label
-               htmlFor="resetCode"
-               className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-             >
-               Enter your resetCode :
-             </label>
-             {verifyResetCodeForm.errors.resetCode && verifyResetCodeForm.touched.resetCode ? (
-               <div
-                 className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-                 role="alert"
-               >
-                 {verifyResetCodeForm.errors.resetCode}
-               </div>
-             ) : null}
-           </div>
-         
-          
-           <div className="flex items-center ">
-           
-           <br/>
-           <button
-             type="submit"
-             className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
-           >
-            {isLoading?<i className="fas fa-spider fa-spin"></i>:'Verify Code'}
-           </button>
-           
-           </div>
-           
-          
-          
-         </form>
-       </div>}
-     
-     
-    </>
+    <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
+      <div className="bg-white dark:bg-gray-800 shadow-md rounded-xl w-full max-w-md p-6 sm:p-8">
+        {apiError && (
+          <div className="mb-4 text-sm text-red-800 bg-red-100 p-3 rounded dark:bg-red-700 dark:text-white">
+            {apiError}
+          </div>
+        )}
+
+        <h2 className="text-2xl sm:text-3xl font-bold text-center text-green-700 mb-6">
+          {formDisplay ? "Forgot Password" : "Enter Reset Code"}
+        </h2>
+
+        <form
+          onSubmit={
+            formDisplay ? forgetForm.handleSubmit : verifyResetCodeForm.handleSubmit
+          }
+        >
+          <div className="mb-5">
+            <label
+              htmlFor={formDisplay ? "email" : "resetCode"}
+              className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              {formDisplay ? "Email Address" : "Reset Code"}
+            </label>
+            <input
+              type={formDisplay ? "email" : "text"}
+              id={formDisplay ? "email" : "resetCode"}
+              name={formDisplay ? "email" : "resetCode"}
+              value={
+                formDisplay
+                  ? forgetForm.values.email
+                  : verifyResetCodeForm.values.resetCode
+              }
+              onChange={
+                formDisplay
+                  ? forgetForm.handleChange
+                  : verifyResetCodeForm.handleChange
+              }
+              onBlur={
+                formDisplay
+                  ? forgetForm.handleBlur
+                  : verifyResetCodeForm.handleBlur
+              }
+              className="w-full px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+              placeholder={formDisplay ? "Enter your email" : "Enter reset code"}
+            />
+            {formDisplay ? (
+              forgetForm.touched.email && forgetForm.errors.email ? (
+                <p className="mt-2 text-sm text-red-600">
+                  {forgetForm.errors.email}
+                </p>
+              ) : null
+            ) : verifyResetCodeForm.touched.resetCode &&
+              verifyResetCodeForm.errors.resetCode ? (
+              <p className="mt-2 text-sm text-red-600">
+                {verifyResetCodeForm.errors.resetCode}
+              </p>
+            ) : null}
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-medium transition"
+          >
+            {isLoading ? (
+              <span className="flex justify-center items-center gap-2">
+                <i className="fas fa-spinner fa-spin"></i> Loading...
+              </span>
+            ) : formDisplay ? (
+              "Send Reset Code"
+            ) : (
+              "Verify Code"
+            )}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

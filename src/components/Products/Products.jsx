@@ -97,53 +97,76 @@ export default function Products() {
             {/* Product Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {filteredProducts.map((product) => {
-                let { _id, title, imageCover, price, category, ratingsAverage } =
-                  product;
+                let {
+                  _id,
+                  title,
+                  imageCover,
+                  price,
+                  category,
+                  ratingsAverage,
+                } = product;
                 let categoryName = category?.name || "unknown-category";
 
                 return (
                   <div
                     key={_id}
-                    className="bg-white shadow-lg rounded-lg p-4 transition-transform duration-300 hover:scale-105"
+                    className="relative overflow-hidden bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group"
                   >
-                    <Link to={`/ProductDetails/${_id}/${categoryName}`}>
-                      <div className="mb-3">
-                        <img
-                          src={imageCover}
-                          alt={title}
-                          className="w-full h-40 object-cover rounded-md"
-                        />
-                      </div>
-                      <h5 className="text-sm text-gray-500">{categoryName}</h5>
-                      <h2 className="text-lg font-semibold">
-                        {title.split(" ").slice(0, 2).join(" ")}
-                      </h2>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-green-600 font-bold">
-                          {price} EGP
-                        </span>
-                        <span className="text-yellow-500 text-sm">
-                          <i className="fa-solid fa-star"></i> {ratingsAverage}
-                        </span>
-                      </div>
-                    </Link>
-
-                    {/* Wishlist & Add to Cart */}
-                    <div className="flex justify-between items-center mt-4">
-                      <button
-                        onClick={() => addProduct(_id)}
-                        className="bg-green-500 text-white py-2 px-4 rounded-md w-full transition duration-300 hover:bg-green-600"
+                    <div className="border border-gray-200 rounded-lg overflow-hidden flex flex-col h-full">
+                      <Link
+                        to={`/ProductDetails/${_id}/${categoryName}`}
+                        className="flex-1"
                       >
-                        Add To Cart
-                      </button>
-                      <i
-                        onClick={() => addWishlistProduct(product._id)}
-                        className={`fa-solid fa-heart text-2xl cursor-pointer ml-3 ${
-                          wishlistState[product._id]
-                            ? "text-red-500"
-                            : "text-gray-400"
-                        }`}
-                      ></i>
+                        <div className="relative overflow-hidden">
+                          <img
+                            src={imageCover}
+                            alt={title}
+                            className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+                          <div className="absolute top-2 right-2">
+                            <span className="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center">
+                              <i className="fa-solid fa-star mr-1"></i>{" "}
+                              {ratingsAverage}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-4 flex-1 flex flex-col">
+                          <div className="flex-1">
+                            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                              {categoryName}
+                            </span>
+                            <h2 className="text-lg font-semibold mt-2 text-gray-800">
+                              {title.split(" ").slice(0, 2).join(" ")}
+                            </h2>
+                            <p className="text-green-600 font-bold mt-2">
+                              {price} EGP
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                      <div className="px-4 pb-4 mt-auto">
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => addProduct(_id)}
+                            className="bg-green-500 text-white py-2 px-4 rounded-md w-full transition duration-300 hover:bg-green-600 flex-1"
+                          >
+                            Add To Cart
+                          </button>
+                          <button
+                            onClick={() => addWishlistProduct(product._id)}
+                            className="ml-2 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-300"
+                          >
+                            <i
+                              className={`fa-solid fa-heart text-xl ${
+                                wishlistState[product._id]
+                                  ? "text-red-500"
+                                  : "text-gray-400"
+                              }`}
+                            ></i>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
